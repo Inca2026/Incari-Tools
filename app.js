@@ -1,107 +1,98 @@
-// Active Socket State Storage Matrix
-let socket = null;
+let wsLink = null;
 
-function toggleNetworkConnection() {
-    const connectBtn = document.getElementById("connect-btn");
-    const disconnectBtn = document.getElementById("disconnect-btn");
-    const statusLabel = document.getElementById("network-status");
-    const wsUrl = document.getElementById("ws-url").value.trim();
-    const token = document.getElementById("auth-token").value.trim();
+function attemptAuthenticationPipeline() {
+    const user = document.getElementById("user-field").value.trim();
+    const token = document.getElementById("auth-field").value.trim();
 
-    if (!socket) {
-        // Validation check before executing live pipeline
-        if (!wsUrl) {
-            logToConsole("[Console Error]: Transmission aborted. Endpoint Gateway input required.");
-            return;
-        }
-
-        logToConsole(`[Connecting]: Initializing handshake sequence to: ${wsUrl}`);
-        
-        try {
-            // Instantiate real, working native web socket connection strings
-            socket = new WebSocket(`${wsUrl}?auth=${token}`);
-
-            socket.onopen = (event) => {
-                statusLabel.textContent = "Online";
-                statusLabel.className = "connected";
-                connectBtn.style.display = "none";
-                disconnectBtn.style.display = "block";
-                logToConsole("[System Connected]: Handshake accepted. Tunnel active. Simultaneous client streaming ready.");
-            };
-
-            socket.onmessage = (event) => {
-                try {
-                    const incomingPayload = JSON.parse(event.data);
-                    logToConsole(`[Incoming Frame]: ${JSON.stringify(incomingPayload)}`);
-                } catch(e) {
-                    logToConsole(`[Incoming Raw Stream]: ${event.data}`);
-                }
-            };
-
-            socket.onerror = (error) => {
-                logToConsole("[Network Error]: Server node unreachable or blocked by CORS network boundaries.");
-            };
-
-            socket.onclose = () => {
-                logToConsole("[System Disconnected]: Stream pipeline closed cleanly.");
-                resetSocketUIState();
-            };
-
-        } catch (error) {
-            logToConsole(`[Connection Fault]: Invalid address scheme configuration: ${error.message}`);
-            resetSocketUIState();
-        }
-    } else {
-        // Cleanly close connection if requested by user
-        socket.close();
-    }
-}
-
-function sendLivePayload() {
-    const input = document.getElementById("chat-message");
-    const payloadText = input.value.trim();
-
-    if (!payloadText) return;
-
-    if (!socket || socket.readyState !== WebSocket.OPEN) {
-        logToConsole("[Transmission Failed]: No active live tunnel socket. Establish network link first.");
+    if (!user || !token) {
+        alert("Please provide both parameters to run authentication handshake.");
         return;
     }
 
-    const standardPayload = {
-        action: "CHAT_BROADCAST",
-        message: payloadText,
-        timestamp: Date.now()
-    };
+    // Switch container configurations cleanly
+    document.getElementById("login-view").style.display = "none";
+    document.getElementById("dashboard-view").style.display = "grid";
+    document.body.style.display = "block"; // Update layout constraints for dashboard view
 
-    // Pushes real string payloads directly over the data tunnel
-    socket.send(JSON.stringify(standardPayload));
+    document.getElementById("user-header").textContent = user;
     
-    // Log output visualization frame layout
-    const window = document.getElementById("chat-window");
-    const msg = document.createElement("p");
-    msg.className = "log-msg";
-    msg.innerHTML = `<span class="log-user">[You]:</span> ${payloadText}`;
-    window.appendChild(msg);
-    window.scrollTop = window.scrollHeight;
+    // Fire client data sync
+    initializeAuthenticatedStream(user, token);
+}
+
+function initializeAuthenticatedStream(user, token) {
+    const chatBox = document.getElementById("chat-window");
+    chatBox.innerHTML = `<p class="log-system">[System]: Access Token received. Attaching socket listeners to Incari networks...</p>`;
+
+    // Live endpoint structure connecting directly into friend-chat relays
+    const TARGET_GATEWAY = "wss://api.incariclient.org/v1/friends";
+    
+    try {
+        wsLink = new WebSocket(`${TARGET_GATEWAY}?user=${user}&auth=${token}`);
+
+        wsLink.onopen = () => {
+            chatBox.innerHTML += `<p class="log-system">[System]: Sync complete! Session established for ${user}.</p>`;
+            populateSyncedFriends();
+        };
+
+        wsLink.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === "MESSAGE") {
+                appendChatMessage(data.sender, data.text);
+            }
+        };
+
+        wsLink.onerror = () => {
+            chatBox.innerHTML += `<p class="log-system" style="color:#ef4444;">[Network Alert]: Authentication gateway offline. Running local companion sandbox context.</p>`;
+            populateSyncedFriends(); // Loads profiles so UI is usable even if network handshake fails
+        };
+
+    } catch (e) {
+        populateSyncedFriends();
+    }
+}
+
+function populateSyncedFriends() {
+    const list = document.getElementById("friends-list");
+    // Standard mock list structures mapping onto user identities
+    list.innerHTML = `
+        <div class="friend-item">
+            <div class="status-dot online"></div>
+            <div><strong>PlayerOne</strong><br><small style="color:var(--text-muted)">Playing Asria</small></div>
+        </div>
+        <div class="friend-item">
+            <div class="status-dot"></div>
+            <div><strong>PlayerTwo</strong><br><small style="color:var(--text-muted)">Offline</small></div>
+        </div>
+    `;
+}
+
+function transmitPayload() {
+    const input = document.getElementById("msg-input");
+    const val = input.value.trim();
+    if (!val) return;
+
+    appendChatMessage("You", val);
+
+    if (wsLink && wsLink.readyState === WebSocket.OPEN) {
+        wsLink.send(JSON.stringify({ action: "SEND", text: val }));
+    }
 
     input.value = "";
 }
 
-function resetSocketUIState() {
-    socket = null;
-    document.getElementById("connect-btn").style.display = "block";
-    document.getElementById("disconnect-btn").style.display = "none";
-    const statusLabel = document.getElementById("network-status");
-    statusLabel.textContent = "Offline";
-    statusLabel.className = "";
+function appendChatMessage(sender, text) {
+    const box = document.getElementById("chat-window");
+    const p = document.createElement("p");
+    p.style.margin = "6px 0";
+    p.innerHTML = `<span class="log-user">[${sender}]:</span> ${text}`;
+    box.appendChild(p);
+    box.scrollTop = box.scrollHeight;
 }
 
-function logToConsole(text) {
-    const window = document.getElementById("chat-window");
-    const msg = document.createElement("p");
-    msg.className = "log-msg log-system";
-    msg.textContent = text;
-    window.appendChild(msg);
-    window.scrollTop = window.scrollHeight;
+function disconnectSession() {
+    if (wsLink) wsLink.close();
+    document.getElementById("dashboard-view").style.display = "none";
+    document.getElementById("login-view").style.display = "flex";
+    document.body.style.display = "flex";
 }

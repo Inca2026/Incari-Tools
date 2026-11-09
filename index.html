@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Incari Client Live Messenger</title>
+    <title>Incari Client Hub</title>
     <style>
         :root {
             --incari-bg: #090a0f;
@@ -22,11 +22,42 @@
             color: var(--text-main);
             margin: 0;
             padding: 24px;
-            display: grid;
-            grid-template-columns: 320px 1fr;
-            gap: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             height: 100vh;
             box-sizing: border-box;
+        }
+
+        /* STATE 1: SLICK INCARI GATEWAY LOGIN */
+        .login-card {
+            background-color: var(--incari-surface);
+            border: 1px solid var(--incari-border);
+            border-radius: 8px;
+            padding: 40px;
+            width: 400px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .login-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--incari-accent), var(--incari-purple));
+            border-top-left-radius: 8px; border-top-right-radius: 8px;
+        }
+        .login-card h1 {
+            color: var(--incari-accent); margin: 0; font-size: 1.6rem; letter-spacing: 1px; text-transform: uppercase; text-align: center;
+        }
+
+        /* STATE 2: LIVE ACCOUNT COMPANION DASHBOARD (HIDDEN ON START) */
+        #dashboard-view {
+            display: none;
+            grid-template-columns: 320px 1fr;
+            gap: 24px;
+            width: 100%;
+            height: 100%;
         }
 
         .panel {
@@ -40,7 +71,6 @@
             position: relative;
             overflow: hidden;
         }
-
         .panel::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
             background: linear-gradient(90deg, var(--incari-accent), var(--incari-purple));
@@ -52,84 +82,80 @@
             display: flex; justify-content: space-between; align-items: center;
         }
 
-        #network-status {
-            font-size: 0.75rem; text-transform: none; letter-spacing: 0; padding: 4px 8px;
-            border-radius: 4px; background: #1c1311; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);
+        /* Friends Components */
+        #friends-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; overflow-y: auto; }
+        .friend-item {
+            display: flex; align-items: center; padding: 12px; border-radius: 6px;
+            background: rgba(255, 255, 255, 0.02); border: 1px solid transparent;
         }
-        #network-status.connected {
-            background: #111c16; color: var(--online-green); border-color: rgba(16, 185, 129, 0.2);
-        }
-
-        .input-group {
-            margin-bottom: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        label { font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; }
-
-        input[type="text"] {
-            background: #0d0e14; border: 1px solid var(--incari-border); color: white;
-            padding: 10px; border-radius: 6px; font-size: 0.9rem; transition: all 0.2s;
-        }
-        input[type="text"]:focus { outline: none; border-color: var(--incari-accent); }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 12px; background-color: var(--text-muted); }
+        .status-dot.online { background-color: var(--online-green); box-shadow: 0 0 10px var(--online-green); }
 
         #chat-window {
             flex-grow: 1; background: #06070a; border: 1px solid var(--incari-border);
-            border-radius: 6px; padding: 16px; font-size: 0.9rem; overflow-y: auto;
-            margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;
+            border-radius: 6px; padding: 16px; font-size: 0.9rem; overflow-y: auto; margin-bottom: 16px;
         }
 
-        .chat-input-area { display: flex; gap: 12px; }
-        .chat-input-area input { flex-grow: 1; }
+        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; }
+
+        input[type="text"], input[type="password"] {
+            background: #0d0e14; border: 1px solid var(--incari-border); color: white;
+            padding: 12px; border-radius: 6px; font-size: 0.9rem; transition: all 0.2s;
+        }
+        input:focus { outline: none; border-color: var(--incari-accent); }
 
         button {
             background: linear-gradient(135deg, #0070f3, #00bfff); color: white;
-            cursor: pointer; border: none; font-weight: bold; padding: 12px 24px;
+            cursor: pointer; border: none; font-weight: bold; padding: 12px;
             text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;
             border-radius: 6px; transition: all 0.2s;
         }
         button:hover { box-shadow: 0 4px 12px rgba(0, 191, 255, 0.4); transform: translateY(-1px); }
-        
-        .disconnect-btn { background: linear-gradient(135deg, #991b1b, #ef4444); display: none; }
-        .disconnect-btn:hover { box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4); }
 
-        .log-msg { margin: 0; line-height: 1.4; }
-        .log-system { color: var(--text-muted); font-size: 0.85rem; font-style: italic; }
         .log-user { color: var(--incari-accent); font-weight: bold; }
-        .log-incoming { color: var(--online-green); font-weight: bold; }
+        .log-system { color: var(--text-muted); font-size: 0.85rem; font-style: italic; }
     </style>
 </head>
 <body>
 
-    <!-- LEFT PANEL: CONNECTION CONTROLLER & CREDENTIALS -->
-    <div class="panel">
-        <h2>Network Bridge</h2>
+    <!-- CONTAINER 1: AUTHENTICATION ACCESS ROUTE -->
+    <div id="login-view" class="login-card">
+        <h1>Incari Network</h1>
+        <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; margin: -10px 0 10px 0;">External Account Sync Node</p>
         
         <div class="input-group">
-            <label>Gateway Endpoint Address</label>
-            <input type="text" id="ws-url" value="wss://api.incariclient.org/v1/chat" placeholder="wss://your-server-proxy...">
+            <label>Incari Username</label>
+            <input type="text" id="user-field" placeholder="Username...">
         </div>
 
         <div class="input-group">
-            <label>Session Authentication Token</label>
-            <input type="text" id="auth-token" value="DemoUserToken_ABC123" placeholder="Paste client auth token...">
+            <label>Account Access Token / Secret</label>
+            <input type="password" id="auth-field" placeholder="Paste your profile sync key...">
         </div>
 
-        <button id="connect-btn" onclick="toggleNetworkConnection()">Establish Connection</button>
-        <button id="disconnect-btn" class="disconnect-btn" onclick="toggleNetworkConnection()">Sever Connection</button>
+        <button onclick="attemptAuthenticationPipeline()">Sync Account</button>
     </div>
 
-    <!-- RIGHT PANEL: INTERACTIVE TELEMETRY CHAT STREAM -->
-    <div class="panel">
-        <h2>Live Client Stream <span id="network-status">Offline</span></h2>
-        <div id="chat-window">
-            <p class="log-msg log-system">[Console]: Standing by. Input endpoints on the left panel to establish live streaming pipelines.</p>
+    <!-- CONTAINER 2: SYNCED COMPANION INTERFACE -->
+    <div id="dashboard-view">
+        <!-- Panel Left: Synced Roster -->
+        <div class="panel">
+            <h2 id="user-header">Syncing...</h2>
+            <div id="friends-list">
+                <!-- Data injection point -->
+            </div>
+            <button style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); margin-top: auto;" onclick="disconnectSession()">Disconnect</button>
         </div>
-        <div class="chat-input-area">
-            <input type="text" id="chat-message" placeholder="Type a message to transmit over active network pipeline..." onkeydown="if(event.key === 'Enter') sendLivePayload()">
-            <button onclick="sendLivePayload()">Transmit</button>
+
+        <!-- Panel Right: Stream Messaging -->
+        <div class="panel">
+            <h2>Live Friend Chat</h2>
+            <div id="chat-window"></div>
+            <div style="display: flex; gap: 12px;">
+                <input type="text" id="msg-input" placeholder="Type a message to push to network client logs..." style="flex-grow: 1;" onkeydown="if(event.key==='Enter') transmitPayload()">
+                <button onclick="transmitPayload()" style="padding: 12px 24px;">Send</button>
+            </div>
         </div>
     </div>
 
