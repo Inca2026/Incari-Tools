@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Incari Client Theme Configurator</title>
+    <title>Incari Client Live Messenger</title>
     <style>
         :root {
             --incari-bg: #090a0f;
@@ -13,6 +13,7 @@
             --incari-purple: #8a2be2;
             --text-main: #e2e8f0;
             --text-muted: #64748b;
+            --online-green: #10b981;
         }
 
         body {
@@ -22,7 +23,7 @@
             margin: 0;
             padding: 24px;
             display: grid;
-            grid-template-columns: 1fr 450px;
+            grid-template-columns: 320px 1fr;
             gap: 24px;
             height: 100vh;
             box-sizing: border-box;
@@ -48,84 +49,88 @@
         h2 { 
             margin-top: 0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;
             color: var(--incari-accent); border-bottom: 1px solid var(--incari-border); padding-bottom: 12px; 
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        .config-row {
+        #network-status {
+            font-size: 0.75rem; text-transform: none; letter-spacing: 0; padding: 4px 8px;
+            border-radius: 4px; background: #1c1311; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        #network-status.connected {
+            background: #111c16; color: var(--online-green); border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .input-group {
+            margin-bottom: 16px;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(31, 35, 54, 0.5);
+            flex-direction: column;
+            gap: 6px;
         }
 
-        label { font-size: 0.9rem; font-weight: 500; color: var(--text-main); }
-        
-        input[type="color"] {
-            border: none; background: none; width: 44px; height: 32px; cursor: pointer;
-        }
+        label { font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; }
 
         input[type="text"] {
-            background: #161924; border: 1px solid var(--incari-border); color: white;
-            padding: 8px; border-radius: 4px; width: 100px; text-align: center;
+            background: #0d0e14; border: 1px solid var(--incari-border); color: white;
+            padding: 10px; border-radius: 6px; font-size: 0.9rem; transition: all 0.2s;
+        }
+        input[type="text"]:focus { outline: none; border-color: var(--incari-accent); }
+
+        #chat-window {
+            flex-grow: 1; background: #06070a; border: 1px solid var(--incari-border);
+            border-radius: 6px; padding: 16px; font-size: 0.9rem; overflow-y: auto;
+            margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;
         }
 
-        #json-output {
-            flex-grow: 1; background: #06070a; border: 1px solid var(--incari-border);
-            border-radius: 6px; padding: 16px; font-family: 'Courier New', Courier, monospace;
-            font-size: 0.85rem; color: #39ff14; resize: none; margin-bottom: 16px;
-        }
+        .chat-input-area { display: flex; gap: 12px; }
+        .chat-input-area input { flex-grow: 1; }
 
         button {
             background: linear-gradient(135deg, #0070f3, #00bfff); color: white;
-            cursor: pointer; border: none; font-weight: bold; padding: 12px;
+            cursor: pointer; border: none; font-weight: bold; padding: 12px 24px;
             text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;
             border-radius: 6px; transition: all 0.2s;
         }
-
         button:hover { box-shadow: 0 4px 12px rgba(0, 191, 255, 0.4); transform: translateY(-1px); }
-        .success-toast { color: var(--online-green); font-size: 0.85rem; text-align: center; margin-top: 8px; display: none; }
+        
+        .disconnect-btn { background: linear-gradient(135deg, #991b1b, #ef4444); display: none; }
+        .disconnect-btn:hover { box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4); }
+
+        .log-msg { margin: 0; line-height: 1.4; }
+        .log-system { color: var(--text-muted); font-size: 0.85rem; font-style: italic; }
+        .log-user { color: var(--incari-accent); font-weight: bold; }
+        .log-incoming { color: var(--online-green); font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <!-- LEFT PANEL: INTERACTIVE THEME MAPPER -->
+    <!-- LEFT PANEL: CONNECTION CONTROLLER & CREDENTIALS -->
     <div class="panel">
-        <h2>Live UI Configuration Map</h2>
-        <div style="overflow-y: auto; flex-grow: 1; padding-right: 8px;">
-            <div class="config-row">
-                <label>Main Background Color</label>
-                <input type="color" id="color-bg" value="#090a0f" oninput="updateThemeJSON()">
-            </div>
-            <div class="config-row">
-                <label>Surface Panels</label>
-                <input type="color" id="color-surface" value="#11131c" oninput="updateThemeJSON()">
-            </div>
-            <div class="config-row">
-                <label>Active Accent Glow</label>
-                <input type="color" id="color-accent" value="#00bfff" oninput="updateThemeJSON()">
-            </div>
-            <div class="config-row">
-                <label>Secondary Accent Gradient</label>
-                <input type="color" id="color-purple" value="#8a2be2" oninput="updateThemeJSON()">
-            </div>
-            <div class="config-row">
-                <label>Text Main Label</label>
-                <input type="color" id="color-text" value="#e2e8f0" oninput="updateThemeJSON()">
-            </div>
-            <div class="config-row">
-                <label>Custom Profile Title String</label>
-                <input type="text" id="text-title" value="IncariUser" oninput="updateThemeJSON()">
-            </div>
+        <h2>Network Bridge</h2>
+        
+        <div class="input-group">
+            <label>Gateway Endpoint Address</label>
+            <input type="text" id="ws-url" value="wss://api.incariclient.org/v1/chat" placeholder="wss://your-server-proxy...">
         </div>
+
+        <div class="input-group">
+            <label>Session Authentication Token</label>
+            <input type="text" id="auth-token" value="DemoUserToken_ABC123" placeholder="Paste client auth token...">
+        </div>
+
+        <button id="connect-btn" onclick="toggleNetworkConnection()">Establish Connection</button>
+        <button id="disconnect-btn" class="disconnect-btn" onclick="toggleNetworkConnection()">Sever Connection</button>
     </div>
 
-    <!-- RIGHT PANEL: JSON CONFIG EXPORTER -->
+    <!-- RIGHT PANEL: INTERACTIVE TELEMETRY CHAT STREAM -->
     <div class="panel">
-        <h2>Incari Client JSON Export</h2>
-        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0;">This utility formats valid configurations that can be dropped straight into the client theme module options panels.</p>
-        <textarea id="json-output" readonly></textarea>
-        <button onclick="copyConfigToClipboard()">Copy Configuration String</button>
-        <div id="toast" class="success-toast">✓ Copied! Open Incari Client Theme settings and paste profile configuration.</div>
+        <h2>Live Client Stream <span id="network-status">Offline</span></h2>
+        <div id="chat-window">
+            <p class="log-msg log-system">[Console]: Standing by. Input endpoints on the left panel to establish live streaming pipelines.</p>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-message" placeholder="Type a message to transmit over active network pipeline..." onkeydown="if(event.key === 'Enter') sendLivePayload()">
+            <button onclick="sendLivePayload()">Transmit</button>
+        </div>
     </div>
 
     <script src="app.js"></script>
