@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Incari External Hub</title>
+    <title>Incari Client Theme Configurator</title>
     <style>
         :root {
             --incari-bg: #090a0f;
@@ -13,154 +13,119 @@
             --incari-purple: #8a2be2;
             --text-main: #e2e8f0;
             --text-muted: #64748b;
-            --online-green: #10b981;
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             background-color: var(--incari-bg);
             color: var(--text-main);
             margin: 0;
             padding: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: grid;
+            grid-template-columns: 1fr 450px;
+            gap: 24px;
             height: 100vh;
             box-sizing: border-box;
-        }
-
-        /* Authentication View Screen */
-        #auth-screen {
-            background-color: var(--incari-surface);
-            border: 1px solid var(--incari-border);
-            border-radius: 8px;
-            padding: 40px;
-            width: 400px;
-            text-align: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-            position: relative;
-        }
-        #auth-screen::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-            background: linear-gradient(90deg, var(--incari-accent), var(--incari-purple));
-            border-top-left-radius: 8px; border-top-right-radius: 8px;
-        }
-
-        /* Main App Grid View (Hidden initially) */
-        #app-screen {
-            display: none;
-            grid-template-columns: 320px 1fr 360px;
-            gap: 20px;
-            width: 100%;
-            height: 100%;
         }
 
         .panel {
             background-color: var(--incari-surface);
             border: 1px solid var(--incari-border);
             border-radius: 8px;
-            padding: 20px;
+            padding: 24px;
             display: flex;
             flex-direction: column;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
             position: relative;
+            overflow: hidden;
         }
+
         .panel::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
             background: linear-gradient(90deg, var(--incari-accent), var(--incari-purple));
-            border-top-left-radius: 8px; border-top-right-radius: 8px;
         }
 
         h2 { 
-            margin-top: 5px; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;
+            margin-top: 0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;
             color: var(--incari-accent); border-bottom: 1px solid var(--incari-border); padding-bottom: 12px; 
         }
 
-        .friend-item {
-            display: flex; align-items: center; padding: 12px; border-radius: 6px;
-            margin-bottom: 10px; background: rgba(255, 255, 255, 0.02); border: 1px solid transparent;
+        .config-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(31, 35, 54, 0.5);
         }
 
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 14px; background-color: var(--text-muted); }
-        .status-dot.online { background-color: var(--online-green); box-shadow: 0 0 10px var(--online-green); }
-
-        #chat-window { 
-            flex-grow: 1; overflow-y: auto; margin-bottom: 15px; padding: 15px; 
-            background: #0d0e14; border-radius: 6px; border: 1px solid var(--incari-border);
-        }
-
-        .chat-input-area { display: flex; gap: 10px; }
-        input, button {
-            background: #161924; border: 1px solid var(--incari-border); color: white;
-            padding: 12px; border-radius: 6px; font-size: 0.9rem;
-        }
-        input:focus { outline: none; border-color: var(--incari-accent); background: #1a1e2c; }
+        label { font-size: 0.9rem; font-weight: 500; color: var(--text-main); }
         
-        .btn-primary {
-            background: linear-gradient(135deg, #0070f3, #00bfff); cursor: pointer; border: none; font-weight: bold;
-            text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px; width: 100%; margin-top: 15px;
+        input[type="color"] {
+            border: none; background: none; width: 44px; height: 32px; cursor: pointer;
         }
-        .btn-primary:hover { box-shadow: 0 4px 12px rgba(0, 191, 255, 0.3); }
 
-        .action-btn { background: #161924; border: 1px solid var(--incari-border); text-align: left; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; width: 100%; cursor: pointer;}
-        .action-btn:hover { background: var(--incari-border); }
-        .avatar-frame { width: 80px; height: 80px; background: #161924; margin: 0 auto 15px; border-radius: 8px; border: 2px dashed var(--incari-border); display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
+        input[type="text"] {
+            background: #161924; border: 1px solid var(--incari-border); color: white;
+            padding: 8px; border-radius: 4px; width: 100px; text-align: center;
+        }
+
+        #json-output {
+            flex-grow: 1; background: #06070a; border: 1px solid var(--incari-border);
+            border-radius: 6px; padding: 16px; font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem; color: #39ff14; resize: none; margin-bottom: 16px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #0070f3, #00bfff); color: white;
+            cursor: pointer; border: none; font-weight: bold; padding: 12px;
+            text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;
+            border-radius: 6px; transition: all 0.2s;
+        }
+
+        button:hover { box-shadow: 0 4px 12px rgba(0, 191, 255, 0.4); transform: translateY(-1px); }
+        .success-toast { color: var(--online-green); font-size: 0.85rem; text-align: center; margin-top: 8px; display: none; }
     </style>
 </head>
 <body>
 
-    <!-- STATE 1: SIGN IN PROOF-OF-CONCEPT CONTAINER -->
-    <div id="auth-screen">
-        <h1 style="color: var(--incari-accent); margin: 0 0 10px 0; font-size: 1.8rem; letter-spacing: 1px;">INCARI CLIENT</h1>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px;">External Bridge Authentication Panel</p>
-        
-        <div style="text-align: left; margin-bottom: 15px;">
-            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">INCARI USERNAME / TOKEN</label>
-            <input type="text" id="username-input" placeholder="Enter proof-of-concept name..." style="width: 100%; box-sizing: border-box;">
+    <!-- LEFT PANEL: INTERACTIVE THEME MAPPER -->
+    <div class="panel">
+        <h2>Live UI Configuration Map</h2>
+        <div style="overflow-y: auto; flex-grow: 1; padding-right: 8px;">
+            <div class="config-row">
+                <label>Main Background Color</label>
+                <input type="color" id="color-bg" value="#090a0f" oninput="updateThemeJSON()">
+            </div>
+            <div class="config-row">
+                <label>Surface Panels</label>
+                <input type="color" id="color-surface" value="#11131c" oninput="updateThemeJSON()">
+            </div>
+            <div class="config-row">
+                <label>Active Accent Glow</label>
+                <input type="color" id="color-accent" value="#00bfff" oninput="updateThemeJSON()">
+            </div>
+            <div class="config-row">
+                <label>Secondary Accent Gradient</label>
+                <input type="color" id="color-purple" value="#8a2be2" oninput="updateThemeJSON()">
+            </div>
+            <div class="config-row">
+                <label>Text Main Label</label>
+                <input type="color" id="color-text" value="#e2e8f0" oninput="updateThemeJSON()">
+            </div>
+            <div class="config-row">
+                <label>Custom Profile Title String</label>
+                <input type="text" id="text-title" value="IncariUser" oninput="updateThemeJSON()">
+            </div>
         </div>
-        <button class="btn-primary" onclick="handleAuthSubmit()">Connect Identity</button>
     </div>
 
-    <!-- STATE 2: INTERACTIVE DASHBOARD CONTAINER (Initially Hidden) -->
-    <div id="app-screen">
-        <!-- Panel 1: Friends -->
-        <div class="panel">
-            <h2>Incari Network Friends</h2>
-            <div id="friends-list">
-                <div class="friend-item">
-                    <div class="status-dot online"></div>
-                    <div><strong>PlayerOne</strong><br><small style="color:var(--text-muted)">Playing on Asria Network</small></div>
-                </div>
-                <div class="friend-item">
-                    <div class="status-dot"></div>
-                    <div><strong>PlayerTwo</strong><br><small style="color:var(--text-muted)">Offline</small></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Panel 2: Messaging -->
-        <div class="panel">
-            <h2>Live Client Bridge</h2>
-            <div id="chat-window"></div>
-            <div class="chat-input-area">
-                <input type="text" id="message-field" placeholder="Type a client message...">
-                <button style="background: var(--incari-accent); border: none; font-weight: bold; color: black; cursor: pointer;" onclick="sendChatMessage()">Send</button>
-            </div>
-        </div>
-
-        <!-- Panel 3: Extras -->
-        <div class="panel">
-            <h2>Cosmetics & Synchronization</h2>
-            <div style="text-align: center; padding: 15px 0;">
-                <div class="avatar-frame">Skins</div>
-                <h3 id="display-profile-name" style="margin: 5px 0 2px 0;">Active User</h3>
-                <span style="color: var(--incari-accent); font-size: 0.85rem;">Premium Sync Active</span>
-            </div>
-            
-            <button class="action-btn"><span>Upload Custom Cape (.png)</span> <span>▲</span></button>
-            <button class="action-btn"><span>Sync Client Themes to Cloud</span> <span>🔄</span></button>
-            <button class="action-btn" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: #ef4444; justify-content: center; font-weight: bold; margin-top: auto;" onclick="logOut()">Disconnect Account</button>
-        </div>
+    <!-- RIGHT PANEL: JSON CONFIG EXPORTER -->
+    <div class="panel">
+        <h2>Incari Client JSON Export</h2>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0;">This utility formats valid configurations that can be dropped straight into the client theme module options panels.</p>
+        <textarea id="json-output" readonly></textarea>
+        <button onclick="copyConfigToClipboard()">Copy Configuration String</button>
+        <div id="toast" class="success-toast">✓ Copied! Open Incari Client Theme settings and paste profile configuration.</div>
     </div>
 
     <script src="app.js"></script>
