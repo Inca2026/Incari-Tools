@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incari External Hub</title>
+    <style>
+        :root {
+            --bg-dark: #121214;
+            --card-dark: #1a1a1e;
+            --accent-blue: #0070f3;
+            --text-main: #ffffff;
+            --text-muted: #a0a0a5;
+            --online-green: #00e676;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+        .panel {
+            background-color: var(--card-dark);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #2a2a30;
+        }
+        h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 1px solid #2a2a30; padding-bottom: 10px; }
+        .friend-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: #222226;
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 12px;
+            background-color: var(--text-muted);
+        }
+        .status-dot.online { background-color: var(--online-green); }
+        #chat-window { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; padding: 10px; background: #121214; border-radius: 8px; }
+        .chat-input-area { display: flex; gap: 10px; }
+        input, button {
+            background: #222226;
+            border: 1px solid #3a3a42;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        input { flex-grow: 1; }
+        button { background: var(--accent-blue); cursor: pointer; border: none; font-weight: bold; }
+        button:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+    <!-- Panel 1: Friends List & Online States -->
+    <div class="panel" id="friends-panel">
+        <h2>Incari Friends</h2>
+        <div id="friends-list">
+            <div class="friend-item">
+                <div class="status-dot online"></div>
+                <div><strong>PlayerOne</strong><br><small style="color:var(--text-muted)">Playing on Asria Network</small></div>
+            </div>
+            <div class="friend-item">
+                <div class="status-dot"></div>
+                <div><strong>PlayerTwo</strong><br><small style="color:var(--text-muted)">Offline</small></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 2: Simultaneous Chat System -->
+    <div class="panel" id="chat-panel">
+        <h2>Live Friend Chat</h2>
+        <div id="chat-window">
+            <p><small style="color:var(--text-muted)">[System]: Connecting to Incari network...</small></p>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="message-field" placeholder="Type a message to sync in-game...">
+            <button onclick="sendChatMessage()">Send</button>
+        </div>
+    </div>
+
+    
+    <div class="panel" id="profile-panel">
+        <h2>Cosmetics & Presets</h2>
+        <div style="text-align: center; padding: 20px 0;">
+            <div style="width: 100px; height: 100px; background: #222226; margin: 0 auto 15px; border-radius: 50%;"></div>
+            <h3>Your Profile</h3>
+        </div>
+        <button style="margin-bottom: 10px;">Upload Custom Cape (.png)</button>
+        <button style="margin-bottom: 10px; background: #333;">Sync Client Themes to Cloud</button>
+        <button style="background: #a11">Log Out</button>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
