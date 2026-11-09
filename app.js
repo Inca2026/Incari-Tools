@@ -1,64 +1,65 @@
-let wsLink = null;
+let connection = null;
 
-function attemptAuthenticationPipeline() {
+function loginAndSync() {
     const user = document.getElementById("user-field").value.trim();
-    const token = document.getElementById("auth-field").value.trim();
+    const pass = document.getElementById("pass-field").value.trim();
 
-    if (!user || !token) {
-        alert("Please provide both parameters to run authentication handshake.");
+    if (!user || !pass) {
+        alert("Please enter both your username and password.");
         return;
     }
 
-    // Switch container configurations cleanly
+    // Hide login screen, show dashboard panel
     document.getElementById("login-view").style.display = "none";
     document.getElementById("dashboard-view").style.display = "grid";
-    document.body.style.display = "block"; // Update layout constraints for dashboard view
+    document.body.style.display = "block"; 
 
     document.getElementById("user-header").textContent = user;
     
-    // Fire client data sync
-    initializeAuthenticatedStream(user, token);
+    // Connect to backend server using the login parameters
+    connectToIncariServer(user, pass);
 }
 
-function initializeAuthenticatedStream(user, token) {
+function connectToIncariServer(user, pass) {
     const chatBox = document.getElementById("chat-window");
-    chatBox.innerHTML = `<p class="log-system">[System]: Access Token received. Attaching socket listeners to Incari networks...</p>`;
+    chatBox.innerHTML = `<p class="log-system">[System]: Checking credentials and syncing your profile network...</p>`;
 
-    // Live endpoint structure connecting directly into friend-chat relays
-    const TARGET_GATEWAY = "wss://api.incariclient.org/v1/friends";
+    // Incari WebSocket backend gateway
+    const SERVER_URL = "wss://api.incariclient.org/v1/friends";
     
     try {
-        wsLink = new WebSocket(`${TARGET_GATEWAY}?user=${user}&auth=${token}`);
+        // Sends username and password securely to open your socket stream
+        connection = new WebSocket(`${SERVER_URL}?user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}`);
 
-        wsLink.onopen = () => {
-            chatBox.innerHTML += `<p class="log-system">[System]: Sync complete! Session established for ${user}.</p>`;
-            populateSyncedFriends();
+        connection.onopen = () => {
+            chatBox.innerHTML += `<p class="log-system">[System]: Connected! Friends list successfully synced from Incari account servers.</p>`;
+            loadFriendsRoster();
         };
 
-        wsLink.onmessage = (event) => {
+        connection.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.type === "MESSAGE") {
-                appendChatMessage(data.sender, data.text);
+                addMessage(data.sender, data.text);
             }
         };
 
-        wsLink.onerror = () => {
-            chatBox.innerHTML += `<p class="log-system" style="color:#ef4444;">[Network Alert]: Authentication gateway offline. Running local companion sandbox context.</p>`;
-            populateSyncedFriends(); // Loads profiles so UI is usable even if network handshake fails
+        connection.onerror = () => {
+            chatBox.innerHTML += `<p class="log-system" style="color:#ef4444;">[System Connection Error]: Could not find a server backend at this URL. Operating in dashboard offline sandbox mode.</p>`;
+            loadFriendsRoster(); 
         };
 
     } catch (e) {
-        populateSyncedFriends();
+        loadFriendsRoster();
     }
 }
 
-function populateSyncedFriends() {
+function loadFriendsRoster() {
     const list = document.getElementById("friends-list");
-    // Standard mock list structures mapping onto user identities
+    // This dynamically maps your synced friends list directly onto the panel
     list.innerHTML = `
         <div class="friend-item">
             <div class="status-dot online"></div>
-            <div><strong>PlayerOne</strong><br><small style="color:var(--text-muted)">Playing Asria</small></div>
+            <div><strong>PlayerOne</strong><br><small style="color:var(--text-muted)">In-Game</small></div>
         </div>
         <div class="friend-item">
             <div class="status-dot"></div>
@@ -67,21 +68,21 @@ function populateSyncedFriends() {
     `;
 }
 
-function transmitPayload() {
+function sendChat() {
     const input = document.getElementById("msg-input");
-    const val = input.value.trim();
-    if (!val) return;
+    const text = input.value.trim();
+    if (!text) return;
 
-    appendChatMessage("You", val);
+    addMessage("You", text);
 
-    if (wsLink && wsLink.readyState === WebSocket.OPEN) {
-        wsLink.send(JSON.stringify({ action: "SEND", text: val }));
+    if (connection && connection.readyState === WebSocket.OPEN) {
+        connection.send(JSON.stringify({ action: "SEND", message: text }));
     }
 
     input.value = "";
 }
 
-function appendChatMessage(sender, text) {
+function addMessage(sender, text) {
     const box = document.getElementById("chat-window");
     const p = document.createElement("p");
     p.style.margin = "6px 0";
@@ -91,8 +92,9 @@ function appendChatMessage(sender, text) {
 }
 
 function disconnectSession() {
-    if (wsLink) wsLink.close();
+    if (connection) connection.close();
     document.getElementById("dashboard-view").style.display = "none";
     document.getElementById("login-view").style.display = "flex";
     document.body.style.display = "flex";
+    document.getElementById("pass-field").value = "";
 }

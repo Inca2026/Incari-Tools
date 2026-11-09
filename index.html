@@ -29,7 +29,7 @@
             box-sizing: border-box;
         }
 
-        /* STATE 1: SLICK INCARI GATEWAY LOGIN */
+        /* STATE 1: STANDARD INCARI LOGIN WINDOW */
         .login-card {
             background-color: var(--incari-surface);
             border: 1px solid var(--incari-border);
@@ -51,7 +51,7 @@
             color: var(--incari-accent); margin: 0; font-size: 1.6rem; letter-spacing: 1px; text-transform: uppercase; text-align: center;
         }
 
-        /* STATE 2: LIVE ACCOUNT COMPANION DASHBOARD (HIDDEN ON START) */
+        /* STATE 2: ACTIVE DASHBOARD (HIDDEN ON START) */
         #dashboard-view {
             display: none;
             grid-template-columns: 320px 1fr;
@@ -69,7 +69,6 @@
             flex-direction: column;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
             position: relative;
-            overflow: hidden;
         }
         .panel::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
@@ -82,7 +81,6 @@
             display: flex; justify-content: space-between; align-items: center;
         }
 
-        /* Friends Components */
         #friends-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; overflow-y: auto; }
         .friend-item {
             display: flex; align-items: center; padding: 12px; border-radius: 6px;
@@ -119,42 +117,41 @@
 </head>
 <body>
 
-    <!-- CONTAINER 1: AUTHENTICATION ACCESS ROUTE -->
+    <!-- LOGIN SCREEN -->
     <div id="login-view" class="login-card">
-        <h1>Incari Network</h1>
-        <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; margin: -10px 0 10px 0;">External Account Sync Node</p>
+        <h1>Incari Account Login</h1>
         
         <div class="input-group">
             <label>Incari Username</label>
-            <input type="text" id="user-field" placeholder="Username...">
+            <input type="text" id="user-field" placeholder="Enter your username...">
         </div>
 
         <div class="input-group">
-            <label>Account Access Token / Secret</label>
-            <input type="password" id="auth-field" placeholder="Paste your profile sync key...">
+            <label>Password</label>
+            <input type="password" id="pass-field" placeholder="Enter your password...">
         </div>
 
-        <button onclick="attemptAuthenticationPipeline()">Sync Account</button>
+        <button onclick="loginAndSync()">Sign In & Sync Friends</button>
     </div>
 
-    <!-- CONTAINER 2: SYNCED COMPANION INTERFACE -->
+    <!-- MAIN APP SCREEN -->
     <div id="dashboard-view">
-        <!-- Panel Left: Synced Roster -->
+        <!-- Friends list panel -->
         <div class="panel">
-            <h2 id="user-header">Syncing...</h2>
+            <h2 id="user-header">Logged In User</h2>
             <div id="friends-list">
-                <!-- Data injection point -->
+                <!-- JavaScript syncs friends list here -->
             </div>
-            <button style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); margin-top: auto;" onclick="disconnectSession()">Disconnect</button>
+            <button style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); margin-top: auto;" onclick="disconnectSession()">Log Out</button>
         </div>
 
-        <!-- Panel Right: Stream Messaging -->
+        <!-- Chat Panel -->
         <div class="panel">
             <h2>Live Friend Chat</h2>
             <div id="chat-window"></div>
             <div style="display: flex; gap: 12px;">
-                <input type="text" id="msg-input" placeholder="Type a message to push to network client logs..." style="flex-grow: 1;" onkeydown="if(event.key==='Enter') transmitPayload()">
-                <button onclick="transmitPayload()" style="padding: 12px 24px;">Send</button>
+                <input type="text" id="msg-input" placeholder="Type a message..." style="flex-grow: 1;" onkeydown="if(event.key==='Enter') sendChat()">
+                <button onclick="sendChat()" style="padding: 12px 24px;">Send</button>
             </div>
         </div>
     </div>
